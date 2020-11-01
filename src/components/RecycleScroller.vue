@@ -116,6 +116,11 @@ export default {
       type: Boolean,
       default: false,
     },
+    
+    displayColumns: {
+      type: Number,
+      default: 1,
+    },
   },
 
   data () {
@@ -277,7 +282,7 @@ export default {
       }
     },
 
-    updateVisibleItems (checkItem, checkPositionDiff = false) {
+    async updateVisibleItems (checkItem, checkPositionDiff = false) {
       const itemSize = this.itemSize
       const minItemSize = this.$_computedMinItemSize
       const typeField = this.typeField
@@ -372,6 +377,22 @@ export default {
       let view
 
       const continuous = startIndex <= this.$_endIndex && endIndex >= this.$_startIndex
+
+      //console.time('getItemsFromHere')
+      let getItemsFromHere=startIndex;
+      for (let i = startIndex; i < endIndex; i++) {
+        if (!items[i].items) { break }
+        getItemsFromHere=i
+      }
+      if (getItemsFromHere<=endIndex-1) {
+        //console.time('worker')
+        const fitems = await this.$store.dispatch('data/fI2', {s:getItemsFromHere, e:endIndex, d:this.displayColumns})
+        //console.timeEnd('worker')
+        Object.freeze(fitems)
+        items.splice(getItemsFromHere, fitems.length, ...fitems)
+        //console.log('startIndex', startIndex, endIndex, getItemsFromHere, fitems)
+      }
+      //console.timeEnd('getItemsFromHere')
 
       if (this.$_continuous !== continuous) {
         if (continuous) {
